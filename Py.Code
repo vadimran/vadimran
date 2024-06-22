@@ -1,0 +1,31 @@
+import telebot
+from forex_python.converter import CurrencyRates
+
+TOKEN = '7387649058:AAEXNlk9DijyfZQERdV0nXt-f6brrC4j9Uc'
+bot = telebot.TeleBot(TOKEN)
+c = CurrencyRates()
+
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.reply_to(message, "Привет! Я бот для конвертации валют. Введите команду /convert и следуйте инструкциям.")
+
+@bot.message_handler(commands=['convert'])
+def convert(message):
+    msg = bot.send_message(message.chat.id, "Введите сумму и две валюты для конвертации (например, 100 USD to EUR):")
+    bot.register_next_step_handler(msg, process_conversion)
+
+def process_conversion(message):
+    try:
+        conversion_input = message.text.split()
+        amount = float(conversion_input[0])  # Преобразуем введенную сумму в число
+        base_currency = conversion_input[1].upper()
+        target_currency = conversion_input[3].upper()
+
+        result = c.convert(base_currency, target_currency, amount)
+        bot.reply_to(message, f"{amount} {base_currency} = {result} {target_currency}")
+
+    except Exception as e:
+        bot.reply_to(message, "Что-то пошло не так. Пожалуйста, убедитесь, что вы ввели правильный формат (например, 100 USD to EUR).")
+
+if __name__ == '__main__':
+    bot.polling(none_stop=True)
